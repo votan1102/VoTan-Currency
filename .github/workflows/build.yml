@@ -1,0 +1,89 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Create package.json
+        run: |
+          node -e "const fs=require('fs');fs.writeFileSync('package.json',JSON.stringify({name:'quy-doi-tien',version:'1.0.0',scripts:{},dependencies:{}},null,2));"
+
+      - name: Install Capacitor
+        run: npm install @capacitor/core@latest @capacitor/cli@latest @capacitor/android@latest
+
+      - name: Prepare www folder
+        run: |
+          mkdir -p www
+          cp index.html www/index.html
+
+      - name: Create capacitor config
+        run: |
+          node -e "const fs=require('fs');fs.writeFileSync('capacitor.config.json',JSON.stringify({appId:'com.votan.currency',appName:'Quy Doi Tien',webDir:'www',server:{androidScheme:'https'},android:{allowMixedContent:true,backgroundColor:'#050505'}},null,2));"
+
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Capacitor sync
+        run: npx cap sync android
+
+      - name: Set Vietnamese app name
+        run: |
+          node -e "
+          const fs=require('fs'),p=require('path');
+          const f='android/app/src/main/res/values/strings.xml';
+          fs.mkdirSync(p.dirname(f),{recursive:true});
+          fs.writeFileSync(f,[
+            '<?xml version=\"1.0\" encoding=\"utf-8\"?>',
+            '<resources>',
+            '    <string name=\"app_name\">Quy \u0110\u1ed5i Ti\u1ec1n</string>',
+            '    <string name=\"title_activity_main\">Quy \u0110\u1ed5i Ti\u1ec1n</string>',
+            '    <string name=\"package_name\">com.votan.currency</string>',
+            '    <string name=\"custom_url_scheme\">com.votan.currency</string>',
+            '</resources>'
+          ].join('\n'),'utf8');
+          console.log('OK strings.xml');
+          "
+
+      - name: Patch AndroidManifest label
+        run: |
+          F="android/app/src/main/AndroidManifest.xml"
+          [ -f "$F" ] && sed -i 's/android:label="[^"]*"/android:label="@string\/app_name"/g' "$F" || true
+
+      - name: Inject app icons
+        run: python3 inject_icons.py
+
+      - name: Build APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Rename APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk QuyDoiTien.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: QuyDoiTien-APK
+          path: QuyDoiTien.apk
+          retention-days: 30
