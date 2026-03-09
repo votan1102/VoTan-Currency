@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#050505">
+    <meta name="format-detection" content="telephone=no">
+    <title>QUY ĐỔI TIỀN TỆ - Võ Tấn</title>
+    <style>
+        :root {
+            --bg-deep: #050505;
+            --surface: rgba(18, 18, 18, 0.98);
+            --gold-gradient: linear-gradient(135deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
+            --gold-main: #d4af37;
+            --gold-glow: rgba(212, 175, 55, 0.25);
+            --text-bright: #ffffff;
+            --text-muted: #777777;
+            --border-gold: rgba(212, 175, 55, 0.25);
+            --danger: #ff4444;
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --safe-left: env(safe-area-inset-left, 0px);
+            --safe-right: env(safe-area-inset-right, 0px);
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+        }
+
+        html {
+            height: 100%;
+            /* Ngăn bounce scroll trên iOS */
+            overscroll-behavior: none;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: var(--bg-deep);
+            color: var(--text-bright);
+            min-height: 100%;
+            min-height: -webkit-fill-available;
+            /* Safe area padding cho notch & home bar */
+            padding:
+                calc(12px + var(--safe-top))
+                calc(12px + var(--safe-right))
+                calc(12px + var(--safe-bottom))
+                calc(12px + var(--safe-left));
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            position: relative;
+        }
+
+        /* ── HIỆU ỨNG NỀN ── */
+        .streak {
+            position: fixed;
+            width: 140vw;
+            height: 60vh;
+            background: radial-gradient(circle, rgba(212,175,55,0.07) 0%, transparent 70%);
+            transform: rotate(-30deg);
+            z-index: 0;
+            pointer-events: none;
+            filter: blur(80px);
+            will-change: transform;
+        }
+        .streak-1 { top: -15vh; left: -20%; }
+        .streak-2 { bottom: -15vh; right: -20%; }
+
+        .watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-25deg);
+            font-size: 11vw;
+            font-weight: 900;
+            color: rgba(212,175,55,0.025);
+            white-space: nowrap;
+            z-index: 0;
+            pointer-events: none;
+            text-transform: uppercase;
+            letter-spacing: 10px;
+            user-select: none;
+        }
+
+        /* ── HEADER ── */
+        .header {
+            text-align: center;
+            margin-bottom: 16px;
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            flex-shrink: 0;
+        }
+
+        .header-title {
+            font-size: clamp(1.25rem, 5.5vw, 1.75rem);
+            font-weight: 900;
+            text-transform: uppercase;
+            background: var(--gold-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 2.5px;
+            line-height: 1.2;
+        }
+
+        .made-by {
+            font-size: clamp(0.55rem, 2vw, 0.65rem);
+            color: var(--gold-main);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            opacity: 0.75;
+            margin-top: 4px;
+        }
+
+        /* ── CARD CHÍNH ── */
+        .converter-card {
+            width: 100%;
+            max-width: 440px;
+            background: var(--surface);
+            border-radius: 24px;
+            padding: clamp(16px, 4vw, 22px);
+            border: 1px solid var(--border-gold);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            position: relative;
+            z-index: 2;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            flex-shrink: 0;
+        }
+
+        /* ── KHỐI TIỀN TỆ ── */
+        .currency-block {
+            margin-bottom: 14px;
+        }
+
+        .label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 7px;
+        }
+
+        .currency-label {
+            font-size: clamp(0.65rem, 2.5vw, 0.75rem);
+            font-weight: 800;
+            color: var(--gold-main);
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+        }
+
+        .edit-trigger {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px 8px;
+            background: #0e0e0e;
+            border: 1px solid #252525;
+            border-radius: 6px;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+            min-height: 26px;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            letter-spacing: 0.3px;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .edit-trigger:active { background: #1e1e1e; color: var(--gold-main); border-color: var(--gold-main); }
+
+        /* ── Ô NHẬP ── */
+        .input-group {
+            position: relative;
+            background: #000;
+            border-radius: 13px;
+            border: 1px solid #1e1e1e;
+            transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s;
+            display: flex;
+            align-items: center;
+            padding: 0 14px;
+        }
+
+        .input-group:focus-within {
+            border-color: var(--gold-main);
+            box-shadow: 0 0 18px var(--gold-glow);
+            transform: translateY(-1px);
+        }
+
+        .input-main {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: clamp(1.3rem, 5.5vw, 1.6rem);
+            font-weight: 800;
+            padding: 14px 0;
+            outline: none;
+            /* Ngăn zoom trên iOS khi font < 16px */
+            font-size: max(16px, clamp(1.3rem, 5vw, 1.6rem));
+            /* Ngăn iOS tự thêm style vào input */
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .input-main::placeholder { color: #2a2a2a; }
+
+        .currency-symbol {
+            font-size: clamp(0.9rem, 3vw, 1.1rem);
+            color: var(--gold-main);
+            margin-left: 10px;
+            font-weight: 900;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        /* ── TỶ GIÁ ── */
+        .rate-config {
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px dashed rgba(212,175,55,0.18);
+        }
+
+        .rate-title {
+            font-size: clamp(0.58rem, 2vw, 0.65rem);
+            color: var(--text-muted);
+            text-align: center;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.8px;
+        }
+
+        .rate-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            background: rgba(255,255,255,0.025);
+            padding: 11px 12px;
+            border-radius: 11px;
+            gap: 8px;
+        }
+
+        .rate-info {
+            font-size: clamp(0.72rem, 2.5vw, 0.82rem);
+            color: #999;
+            font-weight: 600;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .rate-input {
+            flex: 1;
+            min-width: 0;
+            background: #080808;
+            border: 1px solid #2a2a2a;
+            color: var(--gold-main);
+            text-align: center;
+            padding: 9px 8px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: max(16px, 0.95rem);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+            transition: border-color 0.2s;
+        }
+        .rate-input:focus { border-color: var(--gold-main); }
+
+        /* ── NÚT RESET ── */
+        .btn-reset {
+            width: 100%;
+            background: #0a0a0a;
+            border: 1px solid #1e1e1e;
+            color: var(--danger);
+            padding: 13px;
+            border-radius: 12px;
+            font-size: clamp(0.68rem, 2.5vw, 0.75rem);
+            text-transform: uppercase;
+            font-weight: 800;
+            letter-spacing: 1px;
+            margin-top: 14px;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.1s;
+            min-height: 46px;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .btn-reset:active { transform: scale(0.98); background: #000; }
+
+        /* ── MODALS ── */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.92);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: calc(20px + var(--safe-top)) 20px calc(20px + var(--safe-bottom));
+        }
+        .modal.open { display: flex; }
+
+        .modal-box {
+            background: #0c0c0c;
+            padding: clamp(22px, 5vw, 30px);
+            border-radius: 22px;
+            width: 100%;
+            max-width: 340px;
+            border: 1px solid var(--gold-main);
+            box-shadow: 0 0 40px var(--gold-glow);
+        }
+
+        .modal-title {
+            color: var(--gold-main);
+            text-align: center;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-size: clamp(0.9rem, 3.5vw, 1rem);
+        }
+
+        .modal-label {
+            font-size: 0.65rem;
+            color: #555;
+            display: block;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 18px;
+            background: #000;
+            border: 1px solid #2a2a2a;
+            color: #fff;
+            border-radius: 11px;
+            font-size: max(16px, 1rem);
+            outline: none;
+            transition: border-color 0.2s;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .modal-input:focus { border-color: var(--gold-main); }
+
+        .btn-save {
+            background: var(--gold-gradient);
+            color: #000;
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 11px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            min-height: 50px;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .btn-save:active { opacity: 0.85; }
+
+        .btn-cancel {
+            color: #555;
+            text-align: center;
+            display: block;
+            margin-top: 14px;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 0.8rem;
+            padding: 8px;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ── LANDSCAPE TRÊN MOBILE ── */
+        @media (max-height: 500px) and (orientation: landscape) {
+            body { padding-top: 8px; padding-bottom: 8px; }
+            .header { margin-bottom: 10px; }
+            .currency-block { margin-bottom: 8px; }
+            .input-main { padding: 10px 0; }
+            .rate-config { margin-top: 10px; padding-top: 10px; }
+            .rate-row { margin-bottom: 7px; padding: 8px 10px; }
+            .btn-reset { margin-top: 10px; padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="streak streak-1"></div>
+    <div class="streak streak-2"></div>
+    <div class="watermark">Võ Tấn</div>
+
+    <div class="header">
+        <h1 class="header-title">Quy Đổi Tiền Tệ</h1>
+        <div class="made-by">— Made by Võ Tấn —</div>
+    </div>
+
+    <div class="converter-card">
+
+        <!-- USD -->
+        <div class="currency-block">
+            <div class="label-row">
+                <span class="currency-label">Mốc USD Chuẩn</span>
+            </div>
+            <div class="input-group">
+                <input type="text" id="usdInput" class="input-main"
+                    placeholder="0"
+                    inputmode="decimal"
+                    autocomplete="off"
+                    autocorrect="off"
+                    spellcheck="false">
+                <span class="currency-symbol">USD</span>
+            </div>
+        </div>
+
+        <!-- Tiền tệ 1 -->
+        <div class="currency-block">
+            <div class="label-row">
+                <span class="currency-label" id="c1Label">Tiền tệ 1</span>
+                <button class="edit-trigger" onclick="openEdit(1)" type="button">✏️ Đổi tên</button>
+            </div>
+            <div class="input-group">
+                <input type="text" id="c1Input" class="input-main"
+                    placeholder="0"
+                    inputmode="decimal"
+                    autocomplete="off"
+                    autocorrect="off"
+                    spellcheck="false">
+                <span class="currency-symbol" id="c1Symbol">VND</span>
+            </div>
+        </div>
+
+        <!-- Tiền tệ 2 -->
+        <div class="currency-block">
+            <div class="label-row">
+                <span class="currency-label" id="c2Label">Tiền tệ 2</span>
+                <button class="edit-trigger" onclick="openEdit(2)" type="button">✏️ Đổi tên</button>
+            </div>
+            <div class="input-group">
+                <input type="text" id="c2Input" class="input-main"
+                    placeholder="0"
+                    inputmode="decimal"
+                    autocomplete="off"
+                    autocorrect="off"
+                    spellcheck="false">
+                <span class="currency-symbol" id="c2Symbol">WON</span>
+            </div>
+        </div>
+
+        <!-- Tỷ giá -->
+        <div class="rate-config">
+            <div class="rate-title">Thiết lập tỷ giá thực tế</div>
+
+            <div class="rate-row">
+                <span class="rate-info">1 USD =</span>
+                <input type="text" id="rate1" class="rate-input"
+                    value="25.450"
+                    inputmode="decimal"
+                    autocomplete="off"
+                    spellcheck="false">
+                <span class="rate-info" id="rate1Name">VND</span>
+            </div>
+
+            <div class="rate-row">
+                <span class="rate-info">1 USD =</span>
+                <input type="text" id="rate2" class="rate-input"
+                    value="1.380"
+                    inputmode="decimal"
+                    autocomplete="off"
+                    spellcheck="false">
+                <span class="rate-info" id="rate2Name">WON</span>
+            </div>
+        </div>
+
+        <button class="btn-reset" onclick="openResetModal()" type="button">
+            Khôi phục mặc định
+        </button>
+    </div>
+
+    <!-- MODAL ĐỔI TÊN -->
+    <div class="modal" id="editModal" role="dialog" aria-modal="true">
+        <div class="modal-box">
+            <h2 class="modal-title">Cấu hình ký hiệu</h2>
+            <label class="modal-label" for="newSymbol">Mã tiền tệ (VD: EUR, JPY, CAD)</label>
+            <input type="text" id="newSymbol" class="modal-input"
+                maxlength="5"
+                autocomplete="off"
+                autocorrect="off"
+                spellcheck="false"
+                style="text-transform:uppercase">
+            <button class="btn-save" onclick="saveCurrency()" type="button">Cập nhật</button>
+            <span class="btn-cancel" onclick="closeModal('editModal')" role="button" tabindex="0">Quay lại</span>
+        </div>
+    </div>
+
+    <!-- MODAL RESET -->
+    <div class="modal" id="resetModal" role="dialog" aria-modal="true">
+        <div class="modal-box">
+            <h2 class="modal-title" style="color:var(--danger)">Xác nhận khôi phục</h2>
+            <p style="text-align:center; color:#888; margin-bottom:22px; line-height:1.65; font-size:0.85rem;">
+                Hệ thống sẽ xóa mọi tỷ giá tùy chỉnh và đưa tất cả giá trị về <strong style="color:#fff">0</strong>.<br>Boss chắc chắn chứ?
+            </p>
+            <button class="btn-save" onclick="executeHardReset()" type="button">Đồng ý đặt lại</button>
+            <span class="btn-cancel" onclick="closeModal('resetModal')" role="button" tabindex="0">Hủy bỏ</span>
+        </div>
+    </div>
+
+    <script>
+        // ─── CẤU HÌNH MẶC ĐỊNH ───────────────────────────────────────────
+        const DEFAULTS = {
+            c1: { symbol: 'VND', label: 'Tiền tệ 1', rate: 25450 },
+            c2: { symbol: 'WON', label: 'Tiền tệ 2', rate: 1380 }
+        };
+
+        const STORAGE_KEY = 'VoTan_Converter_v7';
+        let config = deepClone(DEFAULTS);
+
+        // ─── STORAGE (với fallback nếu WebView block localStorage) ────────
+        const store = {
+            get(key) {
+                try { return JSON.parse(localStorage.getItem(key)); }
+                catch(e) { return null; }
+            },
+            set(key, val) {
+                try { localStorage.setItem(key, JSON.stringify(val)); }
+                catch(e) { /* bỏ qua nếu không lưu được */ }
+            },
+            remove(key) {
+                try { localStorage.removeItem(key); }
+                catch(e) {}
+            }
+        };
+
+        function deepClone(obj) {
+            return JSON.parse(JSON.stringify(obj));
+        }
+
+        // ─── KHỞI TẠO ────────────────────────────────────────────────────
+        function init() {
+            const saved = store.get(STORAGE_KEY);
+            if (saved) {
+                // Merge để không mất field nếu version cũ thiếu key
+                config.c1 = Object.assign({}, DEFAULTS.c1, saved.c1 || {});
+                config.c2 = Object.assign({}, DEFAULTS.c2, saved.c2 || {});
+            }
+            applyConfig();
+            bindEvents();
+        }
+
+        function applyConfig() {
+            // Symbols
+            setEl('c1Symbol', config.c1.symbol);
+            setEl('c2Symbol', config.c2.symbol);
+            setEl('rate1Name', config.c1.symbol);
+            setEl('rate2Name', config.c2.symbol);
+            // Labels
+            setEl('c1Label', config.c1.label || config.c1.symbol);
+            setEl('c2Label', config.c2.label || config.c2.symbol);
+            // Rates — hiển thị có dấu chấm nghìn (VD: 25.450)
+            getEl('rate1').value = formatRate(config.c1.rate);
+            getEl('rate2').value = formatRate(config.c2.rate);
+        }
+
+        function setEl(id, text) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = text;
+        }
+
+        function getEl(id) {
+            return document.getElementById(id);
+        }
+
+        // ─── ĐỊNH DẠNG SỐ (CHẤM NGHÌN / PHẨY THẬP PHÂN) ─────────────────
+        /**
+         * Parse riêng cho ô tỷ giá — dấu chấm LUÔN là phân nghìn, phẩy là thập phân.
+         * "25.450" → 25450 | "1.380" → 1380 | "25450" → 25450 | "1,5" → 1.5
+         */
+        function parseRateInput(str) {
+            if (!str) return 0;
+            str = str.trim();
+            // Xóa tất cả dấu chấm (phân nghìn), đổi phẩy thành chấm thập phân
+            const normalized = str.replace(/\./g, '').replace(',', '.');
+            const num = parseFloat(normalized);
+            return isNaN(num) ? 0 : num;
+        }
+
+        function formatRate(num) {
+            if (!num || isNaN(num)) return '';
+            // Tỷ giá luôn là số nguyên — chỉ thêm dấu chấm phân nghìn
+            const intVal = Math.round(num);
+            return intVal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        }
+
+        /**
+         * Format số đầu ra để hiển thị: 25000000 → "25.000.000"
+         * Chỉ dùng khi hiển thị KẾT QUẢ tính toán, KHÔNG dùng khi user đang gõ.
+         */
+        function formatResult(num) {
+            if (!num && num !== 0) return '';
+            if (isNaN(num) || !isFinite(num)) return '';
+            // Làm tròn tối đa 4 chữ số thập phân
+            let rounded = Math.round(num * 10000) / 10000;
+            let parts = rounded.toString().split('.');
+            // Thêm dấu chấm hàng nghìn
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            return parts.length > 1 ? parts.join(',') : parts[0];
+        }
+
+        /**
+         * Parse chuỗi do người dùng nhập về số thực.
+         * Hỗ trợ: "25.000.000" → 25000000 | "25,5" → 25.5 | "25.5" (chỉ 1 nhóm) → 25.5
+         */
+        function parseInput(str) {
+            if (!str) return 0;
+            str = str.trim();
+
+            // Đếm dấu chấm và phẩy
+            const dotCount = (str.match(/\./g) || []).length;
+            const commaCount = (str.match(/,/g) || []).length;
+
+            let normalized;
+
+            if (commaCount === 1 && dotCount >= 1) {
+                // VD: "25.000,50" → kiểu Âu, chấm = nghìn, phẩy = thập phân
+                normalized = str.replace(/\./g, '').replace(',', '.');
+            } else if (commaCount === 1 && dotCount === 0) {
+                // VD: "25,5" → phẩy là thập phân
+                normalized = str.replace(',', '.');
+            } else if (dotCount === 1 && commaCount === 0) {
+                // VD: "25.5" → chấm là thập phân (nếu phần thập phân ≤ 3 chữ số)
+                const afterDot = str.split('.')[1] || '';
+                if (afterDot.length <= 3 && parseInt(afterDot, 10) !== parseInt(afterDot.padEnd(3,'0'), 10) % 1000) {
+                    // Ambiguous: "25.500" có thể là 25500 hoặc 25.5
+                    // Quy tắc: nếu sau dấu chấm đúng 3 chữ số → nghìn; còn lại → thập phân
+                    normalized = afterDot.length === 3 ? str.replace('.', '') : str;
+                } else {
+                    normalized = str;
+                }
+            } else if (dotCount > 1) {
+                // VD: "25.000.000" → chấm là nghìn
+                normalized = str.replace(/\./g, '');
+            } else {
+                normalized = str.replace(/,/g, '');
+            }
+
+            const num = parseFloat(normalized);
+            return isNaN(num) ? 0 : num;
+        }
+
+        // ─── SỰ KIỆN ─────────────────────────────────────────────────────
+        function bindEvents() {
+            // Dùng 'input' event thay vì inline oninput để dễ quản lý
+            getEl('usdInput').addEventListener('input', function() { syncFrom('usd'); });
+            getEl('c1Input').addEventListener('input', function() { syncFrom('c1'); });
+            getEl('c2Input').addEventListener('input', function() { syncFrom('c2'); });
+
+            // Khi focus vào rate: xóa dấu chấm để gõ dễ hơn
+            getEl('rate1').addEventListener('focus', function() {
+                this.value = config.c1.rate || '';
+            });
+            getEl('rate2').addEventListener('focus', function() {
+                this.value = config.c2.rate || '';
+            });
+
+            // Rate inputs: parse khi blur, lưu số thực, hiển thị lại có dấu chấm
+            getEl('rate1').addEventListener('blur', function() {
+                const v = parseRateInput(this.value);
+                if (!isNaN(v) && v > 0) {
+                    config.c1.rate = v;
+                    this.value = formatRate(v);
+                    saveConfig();
+                    syncFrom('usd');
+                }
+            });
+
+            getEl('rate2').addEventListener('blur', function() {
+                const v = parseRateInput(this.value);
+                if (!isNaN(v) && v > 0) {
+                    config.c2.rate = v;
+                    this.value = formatRate(v);
+                    saveConfig();
+                    syncFrom('usd');
+                }
+            });
+
+            // Đóng modal khi nhấn ngoài
+            document.getElementById('editModal').addEventListener('click', function(e) {
+                if (e.target === this) closeModal('editModal');
+            });
+            document.getElementById('resetModal').addEventListener('click', function(e) {
+                if (e.target === this) closeModal('resetModal');
+            });
+
+            // Keyboard Enter trong modal
+            getEl('newSymbol').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') saveCurrency();
+            });
+        }
+
+        // ─── THUẬT TOÁN ĐỒNG BỘ ──────────────────────────────────────────
+        function syncFrom(source) {
+            const r1 = config.c1.rate;
+            const r2 = config.c2.rate;
+
+            let baseUSD = 0;
+
+            if (source === 'usd') {
+                baseUSD = parseInput(getEl('usdInput').value);
+            } else if (source === 'c1') {
+                const val = parseInput(getEl('c1Input').value);
+                baseUSD = r1 > 0 ? val / r1 : 0;
+            } else if (source === 'c2') {
+                const val = parseInput(getEl('c2Input').value);
+                baseUSD = r2 > 0 ? val / r2 : 0;
+            }
+
+            // Cập nhật các ô còn lại (không ghi đè ô đang gõ)
+            if (source !== 'usd') setInputFormatted('usdInput', baseUSD);
+            if (source !== 'c1') setInputFormatted('c1Input', baseUSD * r1);
+            if (source !== 'c2') setInputFormatted('c2Input', baseUSD * r2);
+        }
+
+        function setInputFormatted(id, num) {
+            const el = getEl(id);
+            if (!el) return;
+            el.value = num === 0 ? '' : formatResult(num);
+        }
+
+        // ─── LƯU CẤU HÌNH ────────────────────────────────────────────────
+        function saveConfig() {
+            store.set(STORAGE_KEY, {
+                c1: config.c1,
+                c2: config.c2
+            });
+        }
+
+        // ─── QUẢN LÝ MODAL ────────────────────────────────────────────────
+        let activeSlot = 1;
+
+        function openEdit(slot) {
+            activeSlot = slot;
+            const sym = config[`c${slot}`].symbol;
+            const input = getEl('newSymbol');
+            input.value = sym;
+            openModal('editModal');
+            setTimeout(() => input.focus(), 150);
+        }
+
+        function openResetModal() {
+            openModal('resetModal');
+        }
+
+        function openModal(id) {
+            const modal = getEl(id);
+            if (modal) modal.classList.add('open');
+        }
+
+        function closeModal(id) {
+            const modal = getEl(id);
+            if (modal) modal.classList.remove('open');
+        }
+
+        function saveCurrency() {
+            const raw = getEl('newSymbol').value.trim().toUpperCase();
+            if (!raw) return;
+            config[`c${activeSlot}`].symbol = raw;
+            config[`c${activeSlot}`].label = raw;
+            applyConfig();
+            saveConfig();
+            closeModal('editModal');
+            syncFrom('usd');
+        }
+
+        // ─── RESET ────────────────────────────────────────────────────────
+        function executeHardReset() {
+            store.remove(STORAGE_KEY);
+            config = deepClone(DEFAULTS);
+            applyConfig();
+            ['usdInput', 'c1Input', 'c2Input'].forEach(id => {
+                getEl(id).value = '';
+            });
+            closeModal('resetModal');
+        }
+
+        // ─── KHỞI ĐỘNG ───────────────────────────────────────────────────
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
